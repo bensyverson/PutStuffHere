@@ -1,0 +1,21 @@
+<html>
+<head>
+<script src="putstuffhere.js"></script>
+<script>
+
+var func = psh.compile("  <h1>  put name here</h1> <p>\"great\". put test here</p>    ");
+
+var locals = {
+	test: 'ok',
+	name: 'billy'
+};
+
+console.log(func(locals));
+console.log(func(locals));
+
+
+</script>
+</head>
+<body>
+</body>
+</html>
