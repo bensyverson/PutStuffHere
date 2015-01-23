@@ -1,8 +1,48 @@
 "use strict";
 
+/**
+ * @summary PutStuffHere.js is a plain-English caching template system
+ * @author <a href="mailto:ben@bensyverson.com">Ben Syverson</a>
+ * @version 0.1
+ * @copyright © Copyright 2015 Ben Syverson
+ * @license The MIT License (MIT)
+ * Copyright (c) 2015 Ben Syverson
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+var require = require || function(){};
+
 var isBrowser = (typeof window !== 'undefined');
 var fs = require('fs');
 var Queue = require('./queue.js').Queue
+
+
+String.prototype.orgstuffhereEscape = function() {
+	return this.replace(/&/g, '___•••amp•••___')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/'/g, '&apos;')
+				.replace(/"/g, '&quot;')
+				.replace(/'___•••amp•••___'/g, '&amp;');
+};
 
 var println = function(arg) { console.log(arg); };
 /**
@@ -16,7 +56,7 @@ var PutStuffHere = function() {
 
 	this.shouldExtractBody = true;
 
-	var regex = /([\s\W])(?:(?:put|insert)\s+(.+?)\s+here)([\W\s])/gi;
+	var regex = /([\s\W])(?:(?:put|insert)\s+(.+?\S)(?:\s*\(([^)]+)\))?\s+here)([\W\s])/gi;
 	var cache = {};
 
 	var rendered = '';
@@ -47,21 +87,50 @@ var PutStuffHere = function() {
 		return this;
 	};
 
-	this.compile = function(src, template) {
+	this.returnFunction = function(cb) {
+		var self = this;
+		var src = self.currentlyChaining;
+
+		var performCallback = function() {
+			cb(null, self.compile(src));
+		};
+
+		self.enqueue(performCallback);
+		return this;
+	};
+
+	this.compile = function(src) {
 		var self = this;
 
-		var string = 'return "' + template
-			.replace(/"/g, "\\\"")
-			.replace(/\n/g, "\\\n")
-			.replace(regex, "$1\" + ctx.$2 +  \"$3")
-			+ '";';
+		if (typeof cache[src] === 'undefined') {
+			var template = self.html[self.currentlyChaining];
+			var string = 'return "' + template
+				.replace(/"/g, "\\\"")
+				.replace(/\n/g, "\\\n")
+				.replace(regex, function(m, p1,p2,p3,p4) {
+						var varName = p2;
+						if (typeof p3 !== 'undefined') {
+							if (!p3.match(/unescaped/i)) {
+								var parens = p3.split(/\s/);
+								for (var j = 0; j < parens.length; j++) {
+									varName += '.' + parens[j] + '()';
+								}
+							}
+						} else {
+							varName += '.orgstuffhereEscape()';
+						}
+						return '' + p1 + "\" + ctx." + varName + " +  \"" + p4;
+					})
+				+ '";';
 
-		var func = new Function('ctx', string);
+			println(string);
+			var func = new Function('ctx', string);
 
-		println('*********** COMPILED: ' + src);
-		cache[src] = func;
+			println('*********** COMPILED: ' + src);
+			cache[src] = func;
+		}
 
-		return func;
+		return cache[src];
 	};
 
 	this.template = function(locals) {
@@ -69,16 +138,18 @@ var PutStuffHere = function() {
 		var src = self.currentlyChaining;
 
 		var doTemplate = function() {
-			if (cache[src] === 'undefined') {
-				var html = self.html[src];
-				self.compile(src, html);
-			}
-			rendered = cache[src](locals);
+			rendered = self.compile(src)(locals);
 		};
 
 		self.enqueue(doTemplate);
 
 		return this;
+	};
+
+	this.getTemplateFunction = function(src, cb) {
+		var self = this;
+		return self.readHTML(src)
+			.returnFunction(cb);
 	};
 
 	this.view = function(src, locals, cb) {
@@ -127,7 +198,7 @@ PutStuffHere.prototype.readHTML = function(src) {
 		self.currentlyChaining = src;
 
 		// Compile the template
-		self.compile(src, self.html[src]);
+		self.compile(src);
 
 		// Run the queues
 		for (var j = 0; j < self.queues[src].length; j++) {
@@ -182,31 +253,20 @@ PutStuffHere.prototype.readHTML = function(src) {
 	return this;
 };
 
-
-
-var aThing = new PutStuffHere();
-console.log("word <------------");
-
-aThing.view('../../templates/red.html', {subviews: 'Red'}, function(err, value) {
-	println("RED:");
-	println(value);
-});
-aThing.view('../../templates/blue.html', {subviews: 'Blue'}, function(err, value) {
-	println("BLUE:");
-	println(value);
-});
-aThing.view('../../templates/red.html', {subviews: 'Red'}, function(err, value) {
-	println("RED:");
-	println(value);
-});
-aThing.view('../../templates/blue.html', {subviews: 'Blue'}, function(err, value) {
-	println("BLUE:");
-	println(value);
-});
-
+var PutStuffHereSingleton = (function () {
+	var instance = null;
+	return {
+		shared: function () {
+			if ( instance === null ) {
+				instance = new PutStuffHere();
+			}
+			return instance;
+		}
+	};
+})();
 
 
 
 var module = module || {};
 module.exports = module.exports || {};
-module.exports = PutStuffHere;
+module.exports = PutStuffHereSingleton;
