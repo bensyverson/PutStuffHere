@@ -4,7 +4,7 @@
 var fs = require('fs');
 var Queue = require('./queue.js').Queue
 
-
+var println = function(arg) { console.log(arg); };
 /**
  * PutStuffHere
  * @constructor
@@ -13,6 +13,33 @@ var PutStuffHere = function() {
 	this.queues = {};
 	this.currentlyChaining = '';
 	this.html = {};
+
+	this.shouldExtractBody = true;
+
+	var regex = /([\s\W])(?:(?:put|insert)\s+(.+?)\s+here)([\W\s])/gi;
+	var cache = {};
+
+	this.compile = function(template) {
+		var self = this;
+
+		if (cache[template]) {
+			return cache[template];
+		}
+
+		console.log('compiling new.                  ');
+		var string = 'return "' + template
+			.replace(/"/g, "\\\"")
+			.replace(/\n/g, "\\\n")
+			.replace(regex, "$1\" + ctx.$2 +  \"$3")
+			+ '";';
+
+		println(string);
+		var func = new Function('ctx', string);
+
+		cache[template] = func;
+
+		return func;
+	};
 };
 
 /**
@@ -47,34 +74,55 @@ PutStuffHere.prototype.readHTML = function(src) {
 		return this;
 	}
 
+	var finished = function() {
+		// Run the queues
+		for (var j = 0; j < self.queues[src].length; j++) {
+			self.queues[src][j].flush(this);	
+		}
+		
+		// Then delete the queue.
+		self.queues[src] = [];
+
+		// And forget our current chain.
+		self.currentlyChaining = '';
+
+		self.compile(self.html[src]);
+	};
+
 	// In the browser...
 	if (typeof document !== 'undefined') {
-		console.log("################### FETCHING NEW HTML");
 		var obj = document.createElement('object');
 		obj.setAttribute('width', 0);
 		obj.setAttribute('height', 0);
 		obj.addEventListener('load', function(e) {
-			self.html = obj.contentDocument
+			self.html[src] = obj.contentDocument
 				.documentElement
 				.getElementsByTagName("body")[0]
-				.innerHTML;
-
-			// Run the queues
-			for (var j = 0; j < self.queues[src].length; j++) {
-				self.queues[src][j].flush(this);	
-			}
-			
-			// Then delete the queue.
-			self.queues[src] = [];
-
-			// And forget our current chain.
-			self.currentlyChaining = '';
+				.innerHTML
+				.replace(/^\s*/, '')
+				.replace(/\s*$/, '');
+			finished();
 		});
 		obj.setAttribute('data', src);
 		document.body.appendChild(obj);
 	} else if (typeof fs !== 'undefined') {
 		// Or in Node.js, or any context capable of loading fs
+		fs.readFile(__dirname + '/' + src, function(err, data){
+			if (Buffer.isBuffer(data)) { 
+				var html = data.toString('utf8');
 
+				if (self.shouldExtractBody) {
+					if (html.match(/<body[^>]+>/i)) {
+						html = html
+							.replace(/^[\s\S]*?<body[^>]+>\s*/i, '')
+							.replace(/\s*<\/body>[\s\S]*$/i, '');
+					}
+				}
+
+				self.html[src] = html;
+			}
+			finished();
+		});
 	} else {
 		console.log("Operating outside of Node or Browser context. Not sure where I am!");
 	}
@@ -85,13 +133,13 @@ PutStuffHere.prototype.readHTML = function(src) {
  * Print HTML
  * @param {String} src The src of the HTML
  */
-PutStuffHere.prototype.printHTML = function(src) {
+PutStuffHere.prototype.printHTML = function() {
 	var self = this;
 
 	var actuallyPrint = function(resp) {
 		console.log(resp);
 		console.log("Printing HTML •••••••••••• ");
-		console.log(self.html);
+		console.log(self.html[self.currentlyChaining]);
 	}
 
 	if (typeof self.html[self.currentlyChaining] !== 'undefined') {
@@ -103,51 +151,23 @@ PutStuffHere.prototype.printHTML = function(src) {
 	return this;
 };
 
-var aThing = new Thing();
-aThing.readHTML('../templates/index.html').printHTML();
+/**
+ * Template HTML
+ * @param {String} src The src of the HTML
+ */
+
+
+
+
+var aThing = new PutStuffHere();
+console.log("word <------------");
+aThing.readHTML('../../templates/index.html').printHTML();
 // aThing.readHTML('../templates/index.html').printHTML();
 
 
-var psh = psh || (function(){
-
-	var PutStuffHere = function() {
-		var regex = /[\s\W]((?:put|insert)\s+(.+?)\s+here)[\W]/gi;
-
-		var cache = {};
-
-
-
-		this.compile = function(template) {
-			var self = this;
-
-			if (cache[template]) {
-				return cache[template];
-			}
-
-			console.log('compiling new.');
-			var string = 'return "' + template
-				.replace(/"/g, "\\\"")
-				.replace(regex, "\" + ctx.$2 +  \"")
-				+ '";';
-
-			var func = new Function('ctx', string);
-
-			cache[template] = func;
-
- 			return func;
-		};
-
-
-
-	};
-
-	return new PutStuffHere();
-})();
 
 
 
 var module = module || {};
 module.exports = module.exports || {};
-module.exports = {
-	psh: psh
-};
+module.exports = PutStuffHere;
