@@ -1,21 +1,31 @@
 <html>
 <head>
+<script src="http://localhost:35729/livereload.js"></script>
 <script src="putstuffhere.js"></script>
+<script src="../Ishmael/ishmael.js"></script>
+
 <script>
 
-var func = psh.compile("  <h1>  put name here</h1> <p>\"great\". put test here</p>    ");
+var template = psh.compile("  <h1>  put name here</h1> <p>\"great\". put test here</p>    ");
 
 var locals = {
 	test: 'ok',
 	name: 'billy'
 };
 
-console.log(func(locals));
-console.log(func(locals));
+println(template(locals));
+println(template(locals));
 
+var aView = new View();
+
+
+println(aView);
 
 </script>
+
+
 </head>
 <body>
+	
 </body>
 </html>
