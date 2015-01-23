@@ -1,6 +1,6 @@
 "use strict";
 
-
+var isBrowser = (typeof window !== 'undefined');
 var fs = require('fs');
 var Queue = require('./queue.js').Queue
 
@@ -19,26 +19,73 @@ var PutStuffHere = function() {
 	var regex = /([\s\W])(?:(?:put|insert)\s+(.+?)\s+here)([\W\s])/gi;
 	var cache = {};
 
-	this.compile = function(template) {
+	var rendered = '';
+
+	this.enqueue = function(aFunc) {
 		var self = this;
 
-		if (cache[template]) {
-			return cache[template];
+		if (typeof self.html[self.currentlyChaining] !== 'undefined') {
+			aFunc();
+			return this;
+		} else {
+			self.queues[self.currentlyChaining][self.queues[self.currentlyChaining].length - 1].add(aFunc);
 		}
+	};
 
-		console.log('compiling new.                  ');
+	this.rendered = function() {
+		var self = this;
+		return rendered;
+	}
+
+	this.eventually = function(cb) {
+		var self = this;
+		var performCallback = function() {
+			cb(null, self.rendered());
+		};
+
+		self.enqueue(performCallback);
+		return this;
+	};
+
+	this.compile = function(src, template) {
+		var self = this;
+
 		var string = 'return "' + template
 			.replace(/"/g, "\\\"")
 			.replace(/\n/g, "\\\n")
 			.replace(regex, "$1\" + ctx.$2 +  \"$3")
 			+ '";';
 
-		println(string);
 		var func = new Function('ctx', string);
 
-		cache[template] = func;
+		println('*********** COMPILED: ' + src);
+		cache[src] = func;
 
 		return func;
+	};
+
+	this.template = function(locals) {
+		var self = this;
+		var src = self.currentlyChaining;
+
+		var doTemplate = function() {
+			if (cache[src] === 'undefined') {
+				var html = self.html[src];
+				self.compile(src, html);
+			}
+			rendered = cache[src](locals);
+		};
+
+		self.enqueue(doTemplate);
+
+		return this;
+	};
+
+	this.view = function(src, locals, cb) {
+		var self = this;
+		return self.readHTML(src)
+			.template(locals)
+			.eventually(cb);
 	};
 };
 
@@ -75,6 +122,13 @@ PutStuffHere.prototype.readHTML = function(src) {
 	}
 
 	var finished = function() {
+
+		// Set context back to src (could have been reset during loading of another template.)
+		self.currentlyChaining = src;
+
+		// Compile the template
+		self.compile(src, self.html[src]);
+
 		// Run the queues
 		for (var j = 0; j < self.queues[src].length; j++) {
 			self.queues[src][j].flush(this);	
@@ -83,10 +137,9 @@ PutStuffHere.prototype.readHTML = function(src) {
 		// Then delete the queue.
 		self.queues[src] = [];
 
-		// And forget our current chain.
+		// And finally, reset our current chain.
 		self.currentlyChaining = '';
 
-		self.compile(self.html[src]);
 	};
 
 	// In the browser...
@@ -124,46 +177,32 @@ PutStuffHere.prototype.readHTML = function(src) {
 			finished();
 		});
 	} else {
-		console.log("Operating outside of Node or Browser context. Not sure where I am!");
+		println("Operating outside of Node or Browser context. Not sure where I am!");
 	}
 	return this;
 };
-
-/**
- * Print HTML
- * @param {String} src The src of the HTML
- */
-PutStuffHere.prototype.printHTML = function() {
-	var self = this;
-
-	var actuallyPrint = function(resp) {
-		console.log(resp);
-		console.log("Printing HTML •••••••••••• ");
-		console.log(self.html[self.currentlyChaining]);
-	}
-
-	if (typeof self.html[self.currentlyChaining] !== 'undefined') {
-		actuallyPrint();
-		return this;
-	} else {
-		self.queues[self.currentlyChaining][self.queues[self.currentlyChaining].length - 1].add(actuallyPrint);
-	}
-	return this;
-};
-
-/**
- * Template HTML
- * @param {String} src The src of the HTML
- */
-
 
 
 
 var aThing = new PutStuffHere();
 console.log("word <------------");
-aThing.readHTML('../../templates/index.html').printHTML();
-// aThing.readHTML('../templates/index.html').printHTML();
 
+aThing.view('../../templates/red.html', {subviews: 'Red'}, function(err, value) {
+	println("RED:");
+	println(value);
+});
+aThing.view('../../templates/blue.html', {subviews: 'Blue'}, function(err, value) {
+	println("BLUE:");
+	println(value);
+});
+aThing.view('../../templates/red.html', {subviews: 'Red'}, function(err, value) {
+	println("RED:");
+	println(value);
+});
+aThing.view('../../templates/blue.html', {subviews: 'Blue'}, function(err, value) {
+	println("BLUE:");
+	println(value);
+});
 
 
 
