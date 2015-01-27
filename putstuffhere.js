@@ -226,6 +226,7 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 				.innerHTML
 				.replace(/^\s*/, '')
 				.replace(/\s*$/, '');
+			obj.parentElement.removeChild(obj);
 			finished();
 		});
 		obj.setAttribute('data', src);
