@@ -32,7 +32,9 @@ var require = require || function(){};
 
 var isBrowser = (typeof window !== 'undefined');
 var fs = require('fs');
-var Queue = require('./queue.js').Queue
+
+var _Queue = require('./queue.js');
+var Queue = Queue || (_Queue ? _Queue.Queue : null);
 
 
 String.prototype.orgstuffhereEscape = function() {
@@ -49,7 +51,7 @@ var println = function(arg) { console.log(arg); };
  * PutStuffHere
  * @constructor
  */
-var PutStuffHere = function() {
+var PutStuffHerePrivate = function() {
 	this.queues = {};
 	this.currentlyChaining = '';
 	this.html = {};
@@ -77,7 +79,7 @@ var PutStuffHere = function() {
 		return rendered;
 	}
 
-	this.eventually = function(cb) {
+	this.run = function(cb) {
 		var self = this;
 		var performCallback = function() {
 			cb(null, self.rendered());
@@ -119,14 +121,13 @@ var PutStuffHere = function() {
 						} else {
 							varName += '.orgstuffhereEscape()';
 						}
-						return '' + p1 + "\" + ctx." + varName + " +  \"" + p4;
+						return '' + p1 + "\" + ('" + p2 + "' in ctx ? ctx." + varName + " : '') +  \"" + p4;
 					})
 				+ '";';
 
-			println(string);
+			// println(string);
 			var func = new Function('ctx', string);
-
-			println('*********** COMPILED: ' + src);
+			// println('*********** COMPILED: ' + src);
 			cache[src] = func;
 		}
 
@@ -164,7 +165,7 @@ var PutStuffHere = function() {
  * read HTML
  * @param {String} src The src of the HTML
  */
-PutStuffHere.prototype.readHTML = function(src) {
+PutStuffHerePrivate.prototype.readHTML = function(src) {
 	var self = this;
 
 	// WARNING:
@@ -253,20 +254,18 @@ PutStuffHere.prototype.readHTML = function(src) {
 	return this;
 };
 
-var PutStuffHereSingleton = (function () {
+var PutStuffHere = (function () {
 	var instance = null;
 	return {
 		shared: function () {
 			if ( instance === null ) {
-				instance = new PutStuffHere();
+				instance = new PutStuffHerePrivate();
 			}
 			return instance;
 		}
 	};
 })();
 
-
-
 var module = module || {};
 module.exports = module.exports || {};
-module.exports = PutStuffHereSingleton;
+module.exports = PutStuffHere;
