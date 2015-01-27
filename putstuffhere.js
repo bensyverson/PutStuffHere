@@ -36,6 +36,7 @@ var fs = require('fs');
 var _Queue = require('./queue.js');
 var Queue = Queue || (_Queue ? _Queue.Queue : null);
 
+var orgstuffhereNull = '___•••NULL•••___';
 
 String.prototype.orgstuffhereEscape = function() {
 	return this.replace(/&/g, '___•••amp•••___')
@@ -55,6 +56,7 @@ var PutStuffHerePrivate = function() {
 	this.queues = {};
 	this.currentlyChaining = '';
 	this.html = {};
+	this.html[orgstuffhereNull] = "<div></div>";
 
 	this.shouldExtractBody = true;
 
@@ -62,6 +64,21 @@ var PutStuffHerePrivate = function() {
 	var cache = {};
 
 	var rendered = '';
+
+	var wrapVars = function(m, p1,p2,p3,p4) {
+		var varName = p2;
+		if (typeof p3 !== 'undefined') {
+			if (!p3.match(/unescaped/i)) {
+				var parens = p3.split(/\s/);
+				for (var j = 0; j < parens.length; j++) {
+					varName += '.' + parens[j] + '()';
+				}
+			}
+		} else {
+			varName += '.orgstuffhereEscape()';
+		}
+		return '' + p1 + "\" + ('" + p2 + "' in ctx ? ctx." + varName + " : '') +  \"" + p4;
+	};
 
 	this.enqueue = function(aFunc) {
 		var self = this;
@@ -92,7 +109,6 @@ var PutStuffHerePrivate = function() {
 	this.returnFunction = function(cb) {
 		var self = this;
 		var src = self.currentlyChaining;
-
 		var performCallback = function() {
 			cb(null, self.compile(src));
 		};
@@ -103,31 +119,15 @@ var PutStuffHerePrivate = function() {
 
 	this.compile = function(src) {
 		var self = this;
-
 		if (typeof cache[src] === 'undefined') {
-			var template = self.html[self.currentlyChaining];
+			var template = src ? self.html[self.currentlyChaining] : "<div></div>";
 			var string = 'return "' + template
 				.replace(/"/g, "\\\"")
 				.replace(/\n/g, "\\\n")
-				.replace(regex, function(m, p1,p2,p3,p4) {
-						var varName = p2;
-						if (typeof p3 !== 'undefined') {
-							if (!p3.match(/unescaped/i)) {
-								var parens = p3.split(/\s/);
-								for (var j = 0; j < parens.length; j++) {
-									varName += '.' + parens[j] + '()';
-								}
-							}
-						} else {
-							varName += '.orgstuffhereEscape()';
-						}
-						return '' + p1 + "\" + ('" + p2 + "' in ctx ? ctx." + varName + " : '') +  \"" + p4;
-					})
+				.replace(regex, wrapVars)
 				+ '";';
 
-			// println(string);
 			var func = new Function('ctx', string);
-			// println('*********** COMPILED: ' + src);
 			cache[src] = func;
 		}
 
@@ -162,6 +162,15 @@ var PutStuffHerePrivate = function() {
 };
 
 /**
+ * Set Default HTML
+ * @param {String} src The src of the HTML
+ */
+PutStuffHerePrivate.prototype.setDefaultHTML = function(aString) {
+	var self = this;
+	self.html[orgstuffhereNull] = aString;
+}
+
+/**
  * read HTML
  * @param {String} src The src of the HTML
  */
@@ -170,10 +179,10 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 
 	// WARNING:
 	// Because of this, chains can only be added in synchronous methods.
-	self.currentlyChaining = src;
+	self.currentlyChaining = src || orgstuffhereNull;
 
 	// If we already have the answer, then return immediately.
-	if (self.html[src]) {
+	if ((!src) || (self.html[src])) {
 		return this;
 	}
 
