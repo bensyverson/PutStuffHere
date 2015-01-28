@@ -120,7 +120,7 @@ var PutStuffHerePrivate = function() {
 	this.compile = function(src) {
 		var self = this;
 		if (typeof cache[src] === 'undefined') {
-			var template = src ? self.html[self.currentlyChaining] : "<div></div>";
+			var template = self.html[self.currentlyChaining] || "<div></div>";
 			var string = 'return "' + template
 				.replace(/"/g, "\\\"")
 				.replace(/\n/g, "\\\n")
@@ -168,6 +168,7 @@ var PutStuffHerePrivate = function() {
 PutStuffHerePrivate.prototype.setDefaultHTML = function(aString) {
 	var self = this;
 	self.html[orgstuffhereNull] = aString;
+	println("Setting " + orgstuffhereNull + " to " + aString);
 }
 
 /**
