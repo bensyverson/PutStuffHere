@@ -1,5 +1,5 @@
 "use strict";
-
+"use utf8";
 /**
  * @summary PutStuffHere.js is a plain-English caching template system
  * @author <a href="mailto:ben@bensyverson.com">Ben Syverson</a>
@@ -117,18 +117,22 @@ var PutStuffHerePrivate = function() {
 		return this;
 	};
 
+	this.compileText = function(text) {
+		var template = text;
+		var string = 'return "' + template
+			.replace(/"/g, "\\\"")
+			.replace(/\n/g, "\\\n")
+			.replace(regex, wrapVars)
+			+ '";';
+
+		var func = new Function('ctx', string);
+		return func;
+	};
+
 	this.compile = function(src) {
 		var self = this;
 		if (typeof cache[src] === 'undefined') {
-			var template = self.html[self.currentlyChaining] || "<div></div>";
-			var string = 'return "' + template
-				.replace(/"/g, "\\\"")
-				.replace(/\n/g, "\\\n")
-				.replace(regex, wrapVars)
-				+ '";';
-
-			var func = new Function('ctx', string);
-			cache[src] = func;
+			var func = self.compileText(self.html[self.currentlyChaining] || "<div></div>");
 		}
 
 		return cache[src];

@@ -1,31 +1,84 @@
 <html>
-<head>
-<script src="http://localhost:35729/livereload.js"></script>
-<script src="putstuffhere.js"></script>
-<script src="../Ishmael/ishmael.js"></script>
+	<head>
+	<script src="http://localhost:35729/livereload.js"></script>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script src="putstuffhere.js" type="text/javascript" charset="utf-8"></script>
+	<script>
+	var init = function() {
+		var psh = PutStuffHere.shared();
+		var templateField = document.getElementById('template');
+		var localsField = document.getElementById('locals');
 
-<script>
+		var recalculate = function() {
+			var template = psh.compileText(templateField.value);
+			var locals = null; 
+			try {
+				locals = JSON.parse(localsField.value);
+			} catch(e) {
+				localsField.style.background = '#a44';
+			}
+			if (locals) {
+				localsField.style.background = '#444';
+				document.getElementById('rendered').innerHTML = template(locals);
+			}
+		};
 
-var template = psh.compile("  <h1>  put name here</h1> <p>\"great\". put test here</p>    ");
+		templateField.addEventListener('keyup', recalculate);
+		localsField.addEventListener('keyup', recalculate);
+		recalculate();
+	};
+	window.addEventListener('DOMContentLoaded', init);
+	</script>
+	</head>
+	<body>
 
-var locals = {
-	test: 'ok',
-	name: 'billy'
-};
+		<form>
+			<textarea id="template" cols="40"><h1>Put title here</h1>
+<p>put body here</p>
+<p>– put author here</p>
+			</textarea>
+			<p class="math">+</p>
+			<textarea id="locals" cols="40">{
+	"title": "Hello World!",
+	"body": "Try editing the values here. All keys and values must be strings.",
+	"author": "Ben Syverson"
+}
+		</textarea>
+		</form>
 
-println(template(locals));
-println(template(locals));
+		<p class="math">=</p>
+		<div id="rendered">
+		</div>
+		<style type="text/css">
+			form {
+				display: table;
+				margin: 0 auto;
+			}
 
-var aView = new View();
+			form textarea, form p {
+				display: table-cell;
+				vertical-align: middle;
+			}
 
+			textarea {
+				background: #444;
+				color: #fff;
+				font-family: "Menlo", Courier, monospace;
+				height: 15em;
+				display: inline-block;
+			}
+			div {
+				padding: 1em;
+				max-width: 40em;
+				margin: 0 auto;
+				background: #eee;
+			}
 
-println(aView);
-
-</script>
-
-
-</head>
-<body>
-	
-</body>
+			.math {
+				font-size: 400%;
+				text-align: center;
+				margin: 0;
+			}
+		</style>
+	</body>
 </html>
