@@ -28,13 +28,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-var require = require || function(){};
+var require = require || function(){return null;};
 
 var isBrowser = (typeof window !== 'undefined');
 var fs = require('fs');
 
 var _Queue = require('./queue.js');
-var Queue = Queue || (_Queue ? _Queue.Queue : null);
+var Queue = (_Queue ? _Queue.Queue : null) || Queue;
 
 var orgstuffhereNull = '___•••NULL•••___';
 
