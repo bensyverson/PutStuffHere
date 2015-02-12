@@ -133,6 +133,7 @@ var PutStuffHerePrivate = function() {
 		var self = this;
 		if (typeof cache[src] === 'undefined') {
 			var func = self.compileText(self.html[self.currentlyChaining] || "<div></div>");
+			cache[src] = func;
 		}
 
 		return cache[src];
