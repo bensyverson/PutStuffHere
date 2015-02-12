@@ -230,7 +230,7 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 	};
 
 	// In the browser...
-	if (typeof document !== 'undefined') {
+	if (typeof document !== typeof(undefined)) {
 		var obj = document.createElement('object');
 		obj.setAttribute('width', 0);
 		obj.setAttribute('height', 0);
@@ -246,7 +246,7 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 		});
 		obj.setAttribute('data', src);
 		document.body.appendChild(obj);
-	} else if (typeof fs !== 'undefined') {
+	} else if (typeof fs !== typeof(undefined)) {
 		// Or in Node.js, or any context capable of loading fs
 		fs.readFile(__dirname + '/' + src, function(err, data){
 			if (Buffer.isBuffer(data)) { 
@@ -283,5 +283,4 @@ var PutStuffHere = (function () {
 })();
 
 var module = module || {};
-module.exports = module.exports || {};
 module.exports = PutStuffHere;
