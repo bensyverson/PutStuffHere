@@ -1,5 +1,5 @@
 "use strict";
-"use utf8";
+
 /**
  * @summary PutStuffHere.js is a plain-English caching template system
  * @author <a href="mailto:ben@bensyverson.com">Ben Syverson</a>
@@ -28,13 +28,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-var require = require || function(){return null;};
+if (typeof(require) === typeof(undefined)) window.require = function(){return null;};
+var println = println || function(arg) { console.log(arg); };
 
 var isBrowser = (typeof window !== 'undefined');
 var fs = require('fs');
 
-var _Queue = require('./queue.js');
-var Queue = (_Queue ? _Queue.Queue : null) || Queue;
+var q = require('./queue.js') || OrgStuffHereQueue;
+
+
+// var OrgStuffHereQueue = OrgStuffHereQueue || require('./queue.js') ;
+//var OrgStuffHereQueue = require('./queue.js');// || OrgStuffHereQueue;
+
 
 var orgstuffhereNull = '___•••NULL•••___';
 
@@ -47,7 +52,6 @@ String.prototype.orgstuffhereEscape = function() {
 				.replace(/'___•••amp•••___'/g, '&amp;');
 };
 
-var println = function(arg) { console.log(arg); };
 /**
  * PutStuffHere
  * @constructor
@@ -173,7 +177,6 @@ var PutStuffHerePrivate = function() {
 PutStuffHerePrivate.prototype.setDefaultHTML = function(aString) {
 	var self = this;
 	self.html[orgstuffhereNull] = aString;
-	println("Setting " + orgstuffhereNull + " to " + aString);
 }
 
 /**
@@ -192,8 +195,8 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 		return this;
 	}
 
-	// Otherwise, let's setup a queue.
-	var queue = new Queue();
+	// Otherwise, let's setup a queue.	
+	var queue = new q();
 
 	// It's possible that some other queue is already waiting for this HTML.
 	if (typeof self.queues[src] === 'undefined') {
@@ -282,5 +285,5 @@ var PutStuffHere = (function () {
 	};
 })();
 
-var module = module || {};
+if (typeof(module) === typeof(undefined)) window.module = {};
 module.exports = PutStuffHere;
