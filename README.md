@@ -33,7 +33,7 @@ Put Stuff Here is a minimalist, human-first templating system. Instead of writin
 </p>
 ```
 
-To eidt a live example, visit [the main Put Stuff Here page](http://put.stuffhere.org/).
+To edit a live example, visit [the main Put Stuff Here page](http://put.stuffhere.org/).
 
 
 ## Background
