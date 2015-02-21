@@ -82,9 +82,9 @@ Put
 something here.
 ```
 
-Or: Put `<!-- -->` something here.
+Or: `Put <!-- --> something here`.
 
-Put Stuff Here will only expand a phrase if it’s in one contiguous line. The linebreak will of course be ignored by the browser.
+Put Stuff Here will only expand a phrase if it’s in one contiguous line. The linebreak or comment will of course be ignored by the browser.
 
 ## License
 
