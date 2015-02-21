@@ -1,56 +1,137 @@
 <html>
 	<head>
-	<script src="http://localhost:35729/livereload.js"></script>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<script src="queue.js" type="text/javascript" charset="utf-8"></script>
-	<script src="putstuffhere.js" type="text/javascript" charset="utf-8"></script>
-	<script>
-	var init = function() {
-		var psh = PutStuffHere.shared();
-		var templateField = document.getElementById('template');
-		var localsField = document.getElementById('locals');
+		<script src="http://localhost:35729/livereload.js"></script>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<script src="queue.js" type="text/javascript" charset="utf-8"></script>
+		<script src="putstuffhere.js" type="text/javascript" charset="utf-8"></script>
+		<script>
 
-		var recalculate = function() {
-			var template = psh.compileText(templateField.value);
-			var locals = null; 
-			try {
-				locals = JSON.parse(localsField.value);
-			} catch(e) {
-				localsField.style.background = '#a44';
-			}
-			if (locals) {
-				localsField.style.background = '#444';
-				document.getElementById('rendered').innerHTML = template(locals);
-			}
-		};
+var init = function() {
+	var psh = PutStuffHere.shared();
+	var templateField = document.getElementById('template');
+	var localsField = document.getElementById('locals');
 
-		templateField.addEventListener('keyup', recalculate);
-		localsField.addEventListener('keyup', recalculate);
-		recalculate();
+	var recalculate = function() {
+		var template = psh.compileText(templateField.value);
+		try {
+			var locals = JSON.parse(localsField.value);
+			localsField.style.background = '#444';
+			document.getElementById('rendered').innerHTML = template(locals);
+		} catch(e) {
+			localsField.style.background = '#a44';
+		}
 	};
-	window.addEventListener('DOMContentLoaded', init);
-	</script>
+
+	templateField.addEventListener('keyup', recalculate);
+	localsField.addEventListener('keyup', recalculate);
+	recalculate();
+};
+window.addEventListener('DOMContentLoaded', init);
+		
+		</script>
 	</head>
 	<body>
+		<header><h1> Put Stuff Here</h1></header>
+		<p>
+		<em>Put Stuff Here</em> is a minimalist, human-first templating system. Instead of writing something like <span>{{article.title}}</span> or <span>&lt;%=&nbsp;titles[i]&nbsp;%&gt;</span>, you just write <span>Put&nbsp;title&nbsp;here</span>. For example:
+		</p>
 
 		<form>
-			<textarea id="template" cols="40"><h1>Put title here</h1>
-<p>put body here</p>
-<p>– put author here</p>
-			</textarea>
+			<textarea id="template" cols="40"><h2>   Put title here  </h2>
+
+<p>
+Put body here
+</p>
+
+<p>
+– <em>put author here</em>
+</p></textarea>
 			<p class="math">+</p>
 			<textarea id="locals" cols="40">{
-	"title": "Hello World!",
-	"body": "Try editing the values here. All keys and values must be strings.",
-	"author": "Ben Syverson"
-}
-		</textarea>
+  "title": "Hello World!",
+  "body": "Try editing the values in the text areas. All keys and values must be strings.",
+  "author": "Ben Syverson"
+}</textarea>
 		</form>
 
 		<p class="math">=</p>
 		<div id="rendered">
 		</div>
+
+		<p><em>Put Stuff Here</em> is so easy to understand that almost anyone can create or edit a template. This reduces the burden on web developers, and empowers less technical folks to make changes.
+		</p>
+
+		<p>The result is more fluid collaboration and faster iterations. For example, a visual designer can create a template in <a href="http://webflow.com/">WebFlow</a> or another WYSIWYG editor, which can be dropped directly into your prototype.
+		</p>
+
+		<h2>Features</h2>
+			<ul>
+				<li>Very few features!</li>
+				<li>Easy to understand (for everyone).</li>
+				<li>Templates can be compiled to fast functions.</li>
+				<li>Templates can be fetched and cached from <span>.html</span> files, via <span>fs()</span> in Node.js or AJAX in the browser.</li>
+				<li>All values are HTML-escaped by default. To insert HTML, use this parenthetical: <span>Put&nbsp;stuff&nbsp;(unescaped)&nbsp;here</span>.</li>
+			</ul>
+
+		<h2>Parentheticals</h2>
+		<p>Parentheticals will be applied as methods on the string; Given <span>stuff = "Example"</span>, the output from: <span>Put&nbsp;stuff&nbsp;(toLocaleUpperCase)&nbsp;here</span> will be: <span>EXAMPLE</span>. But don’t do that. Leave case transformations to CSS.
+
+		<p>The parenthetical API is provided to allow you to manipulate variables in your own application-specific way. For example, if you need to show a summary of an article, rather than exporting <span>body</span> and a separate variable, <span>summary</span>, you could export <span>body</span>, and extend <span>String</span> with:
+		</p>
+
+		<p><span>String.prototype.summary = function() {<br />
+		&nbsp;&nbsp;return this.substr(0, 30) + "…";<br />
+		}</span></p>
+
+		<p>Then, in your template, you could write: <span>Put&nbsp;body&nbsp;(summary)&nbsp;here</span>. Use this form sparingly, because it makes the template less readable and more complicated.
+		<h2>FAQ</h2>
+
+		<p><strong>Q: What about conditionals, loops, and transformations?</strong><br />
+		A: I strongly believe that these things belong in your application logic. When you mix logic into your template, you suddenly have many places to look for bugs. Logic-riddled templates are far less readable to non-technical people.
+		</p>
+
+		<p><strong>Q: How would you handle a list, then?</strong><br />
+		A: That’s up to you. I might run Put Stuff Here templates against each list item, and concatenate the result into a <span>list</span> variable. Then you could write <span>Put&nbsp;list&nbsp;(unescaped)&nbsp;here</span> in the parent template.
+		</p>
+
+		<p><strong>Q: So you only support one magic phrase?</strong><br />
+		A: Right now, the only supported format is <span>Put stuff here</span>, but support is coming for <span>Insert stuff</span> and <span>Stuff goes here</span>. I would love to get support for other languages—feel free to send a pull request.
+		</p>
+
+		<p><strong>Q: I need to have the phrase "Put X here" in my template. How do I escape it?</strong><br />
+		A: Do you <em>really</em> need it in your template? If so, insert a newline (<span>\n</span>) or HTML tag somewhere in the phrase:
+		</p>
+
+		
+
+		<p><span>Put<br />something here.</span></p>
+
+		<p>Or: <span>Put &lt;!-- --&gt; something here.</span></p>
+
+
+		<p><em>Put Stuff Here</em> will only expand a phrase if it’s in one contiguous line. The linebreak will of course be ignored by the browser.</p>
+
+
+
+		<footer>&copy; Copyright 2015 Ben Syverson. <a href="https://github.com/bensyverson/putstuffhere">MIT License. View on GitHub</a></footer>
 		<style type="text/css">
+			body {
+				font-family: "Georgia", serif;
+				color: #555;
+				background: #eee;
+				line-height: 1.5em;
+			}
+			a:link { color: #e55; }
+			a:visited { color: #e86; }
+			a:hover { color: #f98; }
+			a:active { color: #b00; }
+
+			p, div, ul, footer, header { 
+				width: 30em; 
+				margin: 0 auto; 
+				margin-bottom: 1.5em;
+				text-align: left;
+			}
 			form {
 				display: table;
 				margin: 0 auto;
@@ -60,25 +141,85 @@
 				display: table-cell;
 				vertical-align: middle;
 			}
-
+			span, h1, h2 {
+				color: #09e;
+			}
+			textarea, span {
+				font-family: "Menlo", Courier, monospace;
+				font-size: 90%;
+				padding: 0em 0.25em;
+			}
 			textarea {
 				background: #444;
 				color: #fff;
-				font-family: "Menlo", Courier, monospace;
 				height: 15em;
 				display: inline-block;
+				border: 0;
+				padding: 0.5em;
+				-webkit-transition: background 0.3s;
+				-moz-transition: background 0.3s;
+				-ms-transition: background 0.3s;
+				-o-transition: background 0.3s;
+				transition: background 0.3s;
 			}
+
+			textarea, div {
+				border-radius: 4px;
+			}
+
 			div {
 				padding: 1em;
 				max-width: 40em;
 				margin: 0 auto;
-				background: #eee;
+				margin-bottom: 2em;
+				background: #ddd;
 			}
 
-			.math {
+			div p {
+				margin-bottom: 1em;
+			}
+
+			ul {
+				list-style: none;
+				list-style-position: outside;
+				padding-left: 0.5em;
+			}
+
+			li:before {
+				color: #aaa;
+			    content: '✔ ';   
+			    margin-left: -1.4em; margin-right: .100em;
+			}
+
+			p.math {
+				width: auto;
 				font-size: 400%;
 				text-align: center;
+				margin: 0.2em 0;
+			}
+
+			h1, h2, h3 {
+				text-align: center;
+				font-weight: 100;
+				font-family: "HelveticaNeue-UltraLight", "Helvetica", sans-serif;
+				font-size: 400%;
+				line-height: 1em;
 				margin: 0;
+				margin-bottom: 0.25em;
+			}
+
+			h2 {
+				font-size: 200%;
+				font-family: "HelveticaNeue-Light";
+				font-weight: 200;
+			}
+
+			header {
+				margin-top: 3em;
+			}
+			footer {
+				margin-top: 2em;
+				color: #aaa;
 			}
 		</style>
 	</body>
