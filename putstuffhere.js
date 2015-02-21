@@ -64,7 +64,7 @@ var PutStuffHerePrivate = function() {
 
 	this.shouldExtractBody = true;
 
-	var regex = /([\s\W])(?:(?:put|insert)\s+(.+?\S)(?:\s*\(([^)]+)\))?\s+here)([\W\s])/gi;
+	var regex = /([\s\W]|^)(?:(?:put|insert)\s+(.+?\S)(?:\s*\(([^)]+)\))?\s+here)([\W\s]|$)/gi;
 	var cache = {};
 
 	var rendered = '';
@@ -122,7 +122,8 @@ var PutStuffHerePrivate = function() {
 	};
 
 	this.compileText = function(text) {
-		var template = text;
+		var self = this;
+		var template = text || self.html[orgstuffhereNull];
 		var string = 'return "' + template
 			.replace(/"/g, "\\\"")
 			.replace(/\n/g, "\\\n")
@@ -136,7 +137,7 @@ var PutStuffHerePrivate = function() {
 	this.compile = function(src) {
 		var self = this;
 		if (typeof cache[src] === 'undefined') {
-			var func = self.compileText(self.html[self.currentlyChaining] || "<div></div>");
+			var func = self.compileText(self.html[self.currentlyChaining] || self.html[orgstuffhereNull]);
 			cache[src] = func;
 		}
 
