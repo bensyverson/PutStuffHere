@@ -48,7 +48,7 @@ The result is more fluid collaboration and faster iterations. For example, a vis
 - Easy to understand (for everyone).
 - Templates can be compiled to fast functions.
 - Templates can be fetched and cached from .html files, via `fs()` in Node.js or AJAX in the browser.
-All values are HTML-escaped by default. To insert HTML, use this parenthetical: `Put stuff (unescaped) here`.
+- All values are HTML-escaped by default. To insert HTML, use this parenthetical: `Put stuff (unescaped) here`.
 
 
 ## Parentheticals
@@ -68,13 +68,13 @@ Then, in your template, you could write: `Put body (summary) here`. Use this for
 **Q: What about conditionals, loops, and transformations?**  
 A: I strongly believe that these things belong in your application logic. When you mix logic into your template, you suddenly have many places to look for bugs. Logic-riddled templates are far less readable to non-technical people.
 
-**Q: How would you handle a list, then?** 
+**Q: How would you handle a list, then?**  
 A: That’s up to you. I might run Put Stuff Here templates against each list item, and concatenate the result into a `list` variable. Then you could write `Put list (unescaped) here` in the parent template.
 
-**Q: So you only support one magic phrase?** 
+**Q: So you only support one magic phrase?**  
 A: Right now, the only supported format is `Put stuff here`, but support is coming for `Insert stuff` and `Stuff goes here`. I would love to get support for other languages—feel free to send a pull request.
 
-**Q: I need to have the phrase "Put X here" in my template. How do I escape it?** 
+**Q: I need to have the phrase "Put X here" in my template. How do I escape it?**  
 A: Do you really need it in your template? If so, insert a newline (`\n`) or HTML tag somewhere in the phrase:
 
 ```
