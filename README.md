@@ -90,7 +90,7 @@ Put Stuff Here will only expand a phrase if it’s in one contiguous line. The l
 
 Put Stuff Here can be used in Node, the browser, or via Browserify.
 
-```json
+```javascript
 var psh = require('./putstuffhere.js').shared();
 
 // Fetch template.html from this directory.
@@ -102,7 +102,7 @@ psh.getTemplateFunction('template.html', function(err, func) {
 ```
 
 
-```json
+```javascript
 var psh = require('./putstuffhere.js');
 
 // Compile a string literal directly
