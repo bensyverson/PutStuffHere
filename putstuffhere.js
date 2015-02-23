@@ -34,7 +34,7 @@ var println = println || function(arg) { console.log(arg); };
 var isBrowser = (typeof window !== 'undefined');
 var fs = require('fs');
 
-var q = OrgStuffHereQueue || require('./queue.js');
+var OrgStuffHereQueue = OrgStuffHereQueue || require('./queue.js');
 
 var orgstuffhereNull = '___•••NULL•••___';
 
@@ -208,7 +208,7 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 	}
 
 	// Otherwise, let's setup a queue.	
-	var queue = new q();
+	var queue = new OrgStuffHereQueue();
 
 	// It's possible that some other queue is already waiting for this HTML.
 	if (typeof self.queues[src] === 'undefined') {
