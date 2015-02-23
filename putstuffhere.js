@@ -110,7 +110,18 @@ var PutStuffHerePrivate = function() {
 		return this;
 	};
 
-	this.returnFunction = function(cb) {
+	this.html = function(cb) {
+		var self = this;
+		var src = self.currentlyChaining;
+		var performCallback = function() {
+			cb(null, self.html[src]);
+		};
+
+		self.enqueue(performCallback);
+		return this;
+	};
+
+	this.templateFunction = function(cb) {
 		var self = this;
 		var src = self.currentlyChaining;
 		var performCallback = function() {
@@ -121,8 +132,11 @@ var PutStuffHerePrivate = function() {
 		return this;
 	};
 
-	this.compileText = function(text) {
+	this.compileText = function(text, shouldCache) {
 		var self = this;
+		if (typeof cache[text] !== typeof(undefined)) {
+			return cache[text];
+		}
 		var template = text || self.html[orgstuffhereNull];
 		var string = 'return "' + template
 			.replace(/"/g, "\\\"")
@@ -131,6 +145,9 @@ var PutStuffHerePrivate = function() {
 			+ '";';
 
 		var func = new Function('ctx', string);
+		if (shouldCache) {
+			cache[text] = func;
+		}
 		return func;
 	};
 
@@ -157,17 +174,16 @@ var PutStuffHerePrivate = function() {
 		return this;
 	};
 
+	this.getHTML = function(src, cb) {
+		var self = this;
+		return self.readHTML(src)
+			.html(cb);
+	};
+
 	this.getTemplateFunction = function(src, cb) {
 		var self = this;
 		return self.readHTML(src)
-			.returnFunction(cb);
-	};
-
-	this.view = function(src, locals, cb) {
-		var self = this;
-		return self.readHTML(src)
-			.template(locals)
-			.eventually(cb);
+			.templateFunction(cb);
 	};
 };
 
