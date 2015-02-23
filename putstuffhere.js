@@ -34,12 +34,7 @@ var println = println || function(arg) { console.log(arg); };
 var isBrowser = (typeof window !== 'undefined');
 var fs = require('fs');
 
-var q = require('./queue.js') || OrgStuffHereQueue;
-
-
-// var OrgStuffHereQueue = OrgStuffHereQueue || require('./queue.js') ;
-//var OrgStuffHereQueue = require('./queue.js');// || OrgStuffHereQueue;
-
+var q = OrgStuffHereQueue || require('./queue.js');
 
 var orgstuffhereNull = '___•••NULL•••___';
 
@@ -273,10 +268,15 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 				var html = data.toString('utf8');
 
 				if (self.shouldExtractBody) {
-					if (html.match(/<body[^>]+>/i)) {
+					if (html.match(/<body[^>]*>/i)) {
 						html = html
-							.replace(/^[\s\S]*?<body[^>]+>\s*/i, '')
-							.replace(/\s*<\/body>[\s\S]*$/i, '');
+							.replace(/^[\s\S]*?<body[^>]*>\s*/i, '')
+							.replace(/\s*<\/[\s]*body>[\s\S]*$/i, '');
+					} else if (html.match(/<html[^>]*>/i)) {
+						// Technically, <body> is optional.
+						html = html
+							.replace(/^[\s\S]*?<html[^>]*>\s*/i, '')
+							.replace(/\s*<\/[\s]*html>[\s\S]*$/i, '');
 					}
 				}
 

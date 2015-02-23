@@ -86,6 +86,44 @@ Or: `Put <!-- --> something here`.
 
 Put Stuff Here will only expand a phrase if it’s in one contiguous line. The linebreak or comment will of course be ignored by the browser.
 
+## Examples
+
+Put Stuff Here can be used in Node, the browser, or via Browserify.
+
+```json
+var psh = require('./putstuffhere.js').shared();
+
+// Fetch template.html from this directory.
+psh.getTemplateFunction('template.html', function(err, func) {
+	var locals = { title: "Hello World" };
+	console.log( func(locals) );
+});
+
+```
+
+
+```json
+var psh = require('./putstuffhere.js');
+
+// Compile a string literal directly
+var func = psh.compileText('<p>Put title here</p>');
+var locals = { title: "Hello World" };
+console.log( func(locals) );
+
+```
+
+```html
+<script src="queue.js" type="text/javascript" charset="utf-8"></script>
+<script src="putstuffhere.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript">
+		var psh = PutStuffHere.shared();
+		var func = psh.compileText('<p>Put title here</p>');
+		var locals = { title: "Hello World" };
+		console.log( func(locals) );
+</script>
+
+```
+
 ## License
 
 See LICENSE.md for the full MIT license.
