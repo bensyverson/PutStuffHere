@@ -39,7 +39,8 @@ var OrgStuffHereQueue = OrgStuffHereQueue || require('./queue.js');
 var orgstuffhereNull = '___•••NULL•••___';
 
 String.prototype.orgstuffhereEscape = function() {
-	return this.replace(/&/g, '___•••amp•••___')
+	return this	.replace(/___•••[^•]+•••___/g, '')			// sanitize input
+				.replace(/&/g, '___•••amp•••___')
 				.replace(/</g, '&lt;')
 				.replace(/>/g, '&gt;')
 				.replace(/'/g, '&apos;')
@@ -105,7 +106,7 @@ var PutStuffHerePrivate = function() {
 		return this;
 	};
 
-	this.html = function(cb) {
+	this.htmlValue = function(cb) {
 		var self = this;
 		var src = self.currentlyChaining;
 		var performCallback = function() {
@@ -133,6 +134,7 @@ var PutStuffHerePrivate = function() {
 			return cache[text];
 		}
 		var template = text || self.html[orgstuffhereNull];
+
 		var string = 'return "' + template
 			.replace(/"/g, "\\\"")
 			.replace(/\n/g, "\\\n")
@@ -172,13 +174,13 @@ var PutStuffHerePrivate = function() {
 	this.getHTML = function(src, cb) {
 		var self = this;
 		return self.readHTML(src)
-			.html(cb);
+					.htmlValue(cb);
 	};
 
 	this.getTemplateFunction = function(src, cb) {
 		var self = this;
 		return self.readHTML(src)
-			.templateFunction(cb);
+					.templateFunction(cb);
 	};
 };
 
@@ -223,6 +225,7 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 		return this;
 	}
 
+
 	var finished = function() {
 
 		// Set context back to src (could have been reset during loading of another template.)
@@ -244,6 +247,7 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 
 	};
 
+
 	// In the browser...
 	if (typeof document !== typeof(undefined)) {
 		var obj = document.createElement('object');
@@ -262,11 +266,15 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 		obj.setAttribute('data', src);
 		document.body.appendChild(obj);
 	} else if (typeof fs !== typeof(undefined)) {
+
 		// Or in Node.js, or any context capable of loading fs
 		fs.readFile(__dirname + '/' + src, function(err, data){
+			self.html[src] = '';
+			if (err) {
+				println("Warning: " + src);
+			}
 			if (Buffer.isBuffer(data)) { 
 				var html = data.toString('utf8');
-
 				if (self.shouldExtractBody) {
 					if (html.match(/<body[^>]*>/i)) {
 						html = html
@@ -279,7 +287,6 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 							.replace(/\s*<\/[\s]*html>[\s\S]*$/i, '');
 					}
 				}
-
 				self.html[src] = html;
 			}
 			finished();
