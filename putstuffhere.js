@@ -28,7 +28,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-if (typeof(require) === typeof(undefined)) window.require = function(){return null;};
+if (typeof(require) === typeof(undefined))  window.require = function(){return null;};
 var println = println || function(arg) { console.log(arg); };
 
 var isBrowser = (typeof window !== 'undefined');
@@ -38,6 +38,21 @@ var OrgStuffHereQueue = OrgStuffHereQueue || require('./queue.js');
 
 var orgstuffhereNull = '___•••NULL•••___';
 
+
+// Test
+
+/**
+ * Extend String with an escape function
+ * @method orgstuffhereEscape
+ * @return {String}
+ * @example
+ * "I went to the café with no html tags.".orgstuffhereEscape() 
+ *    // => "I went to the café with no html tags."
+ * '<div id="Testing" alt="this&that;" />'.orgstuffhereEscape() 
+ *    // => "&lt;div id=&quot;Testing&quot; alt=&quot;this&amp;that;&quot; /&gt;"
+ * 'Pathological case: ___•••amp•••___copy;'.orgstuffhereEscape()
+ *    // => "Pathological case: copy;"
+ */
 String.prototype.orgstuffhereEscape = function() {
 	return this	.replace(/___•••[^•]+•••___/g, '')			// sanitize input
 				.replace(/&/g, '___•••amp•••___')
@@ -45,12 +60,18 @@ String.prototype.orgstuffhereEscape = function() {
 				.replace(/>/g, '&gt;')
 				.replace(/'/g, '&apos;')
 				.replace(/"/g, '&quot;')
-				.replace(/'___•••amp•••___'/g, '&amp;');
+				.replace(/___•••amp•••___/g, '&amp;');
 };
 
 /**
- * PutStuffHere
+ * Extend String with an escape function
+ * @class PutStuffHerePrivate
  * @constructor
+ * @examples
+ * var psh = new PutStuffHerePrivate();
+ * 
+ * psh
+ *    // => instanceof PutStuffHerePrivate
  */
 var PutStuffHerePrivate = function() {
 	this.queues = {};
@@ -64,6 +85,20 @@ var PutStuffHerePrivate = function() {
 	var cache = {};
 
 	var rendered = '';
+
+	/**
+	 * Wrap variables
+	 * @private
+	 * @param {Array} m The match array
+	 * @param {String} p1 The previous char
+	 * @param {String} p2 The variable name
+	 * @param {String} p3 A parenthetical (optional)
+	 * @param {String} p4 The next char
+	 * @returns {String} The string with variables wrapped
+	 * @examples
+	 * PutStuffHerePrivate.wrapVars('<div>Put stuff here</div>')
+	 *    // => 'test'
+	 */
 
 	var wrapVars = function(m, p1,p2,p3,p4) {
 		var varName = p2;
@@ -98,6 +133,7 @@ var PutStuffHerePrivate = function() {
 
 	this.run = function(cb) {
 		var self = this;
+
 		var performCallback = function() {
 			cb(null, self.rendered());
 		};
@@ -106,9 +142,21 @@ var PutStuffHerePrivate = function() {
 		return this;
 	};
 
+    /**
+	 * Get HTML Value
+ 	 * @memberOf PutStuffHerePrivate
+	 * @param {Function} cb The callback function
+	 * @returns {PutStuffHerePrivate} 
+	 * @examples
+	 * var aPSH = PutStuffHere();
+	 * aPSH.compile('<p>Put stuff here</p>');
+	 * 
+	 * aPSH.htmlvalue(function(){})  // calls callback 1 time
+	 */
 	this.htmlValue = function(cb) {
 		var self = this;
 		var src = self.currentlyChaining;
+
 		var performCallback = function() {
 			cb(null, self.html[src]);
 		};
@@ -120,6 +168,7 @@ var PutStuffHerePrivate = function() {
 	this.templateFunction = function(cb) {
 		var self = this;
 		var src = self.currentlyChaining;
+
 		var performCallback = function() {
 			cb(null, self.compile(src));
 		};
@@ -128,6 +177,23 @@ var PutStuffHerePrivate = function() {
 		return this;
 	};
 
+	/**
+	 * Wrap variables found with the Put Stuff Here regex
+	 * @memberOf PutStuffHerePrivate
+	 * @param {String} text A template
+	 * @param {boolean} shouldCache Should we cache the function?
+	 * @returns {Function} The compiled function
+	 * @examples
+	 * var psh = new PutStuffHerePrivate();
+	 * var func = psh.compileText("<div>put stuff here\nput html (unescaped) here</div>", false);
+	 * var lower = psh.compileText("<p>put uppercase (toLocaleLowerCase) here</p>", false);
+	 *
+	 * func // instanceof Function
+	 * func({'stuff': 'something'})  // => "<div>something</div>"
+	 * func({'stuff': '<p id="test">&amp;</p>'})  // => "<div>&lt;p id=&quot;test&quot;&gt;&amp;amp;&lt;/p&gt;</div>"
+	 * func({'stuff': 'title', 'html': '<p id="test">&amp;</p>'})  // => '<div>title<p id="test">&amp;</p></div>'
+	 * lower({'uppercase': 'CAFÉ STREETS'}) // => "<p>café streets</p>"
+	 */
 	this.compileText = function(text, shouldCache) {
 		var self = this;
 		if (typeof cache[text] !== typeof(undefined)) {
@@ -185,18 +251,21 @@ var PutStuffHerePrivate = function() {
 };
 
 /**
- * Set Default HTML
- * @param {String} src The src of the HTML
+ * Set the default HTML
+ * @memberOf PutStuffHerePrivate
+ * @examples
+ * var psh = new PutStuffHerePrivate();
+ * psh.setDefaultHTML('<p></p>')
+ * 
+ * psh.html[orgstuffhereNull]
+ *    // => '<p></p>'
  */
 PutStuffHerePrivate.prototype.setDefaultHTML = function(aString) {
 	var self = this;
 	self.html[orgstuffhereNull] = aString;
 }
 
-/**
- * read HTML
- * @param {String} src The src of the HTML
- */
+
 PutStuffHerePrivate.prototype.readHTML = function(src) {
 	var self = this;
 
