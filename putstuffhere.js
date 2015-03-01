@@ -35,6 +35,7 @@ var isBrowser = (typeof window !== 'undefined');
 var fs = require('fs');
 
 var OrgStuffHereQueue = OrgStuffHereQueue || require('./queue.js');
+var PutStuffHereAjax = PutStuffHereAjax || require('./ajax.js');
 
 var orgstuffhereNull = '___•••NULL•••___';
 
@@ -265,6 +266,20 @@ PutStuffHerePrivate.prototype.setDefaultHTML = function(aString) {
 	self.html[orgstuffhereNull] = aString;
 }
 
+PutStuffHerePrivate.prototype.extractBody = function(html) {
+	var self = this;
+	if (html.match(/<body[^>]*>/i)) {
+		html = html
+			.replace(/^[\s\S]*?<body[^>]*>\s*/i, '')
+			.replace(/\s*<\/[\s]*body>[\s\S]*$/i, '');
+	} else if (html.match(/<html[^>]*>/i)) {
+		// Technically, <body> is optional.
+		html = html
+			.replace(/^[\s\S]*?<html[^>]*>\s*/i, '')
+			.replace(/\s*<\/[\s]*html>[\s\S]*$/i, '');
+	}
+	return html;
+};
 
 PutStuffHerePrivate.prototype.readHTML = function(src) {
 	var self = this;
@@ -316,24 +331,44 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 
 	};
 
+	var handleHtml = function(someHtml) {
+		if (self.shouldExtractBody) {
+			someHtml = self.extractBody(someHtml);
+		}
+		self.html[src] = someHtml;
+	};
 
 	// In the browser...
 	if (typeof document !== typeof(undefined)) {
-		var obj = document.createElement('object');
-		obj.setAttribute('width', 0);
-		obj.setAttribute('height', 0);
-		obj.addEventListener('load', function(e) {
-			self.html[src] = obj.contentDocument
-				.documentElement
-				.getElementsByTagName("body")[0]
-				.innerHTML
-				.replace(/^\s*/, '')
-				.replace(/\s*$/, '');
-			obj.parentElement.removeChild(obj);
-			finished();
-		});
-		obj.setAttribute('data', src);
-		document.body.appendChild(obj);
+		println(window.location.protocol);
+		if (window.location.protocol === 'file:') {
+			var obj = document.createElement('object');
+			obj.setAttribute('width', 0);
+			obj.setAttribute('height', 0);
+			obj.addEventListener('load', function(e) {
+				self.html[src] = obj.contentDocument
+					.documentElement
+					.getElementsByTagName("body")[0]
+					.innerHTML
+					.replace(/^\s*/, '')
+					.replace(/\s*$/, '');
+				obj.parentElement.removeChild(obj);
+				finished();
+			});
+			obj.setAttribute('data', src);
+			document.body.appendChild(obj);
+		} else {
+			PutStuffHereAjax.getViaStandardHTTP(src, function(err, html){
+				if (err) {
+					println("ERROR: ");
+					println(err);
+					return;
+				} else {
+					handleHtml(html);
+				}
+				finished();
+			});			
+		}
 	} else if (typeof fs !== typeof(undefined)) {
 
 		// Or in Node.js, or any context capable of loading fs
@@ -344,19 +379,7 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 			}
 			if (Buffer.isBuffer(data)) { 
 				var html = data.toString('utf8');
-				if (self.shouldExtractBody) {
-					if (html.match(/<body[^>]*>/i)) {
-						html = html
-							.replace(/^[\s\S]*?<body[^>]*>\s*/i, '')
-							.replace(/\s*<\/[\s]*body>[\s\S]*$/i, '');
-					} else if (html.match(/<html[^>]*>/i)) {
-						// Technically, <body> is optional.
-						html = html
-							.replace(/^[\s\S]*?<html[^>]*>\s*/i, '')
-							.replace(/\s*<\/[\s]*html>[\s\S]*$/i, '');
-					}
-				}
-				self.html[src] = html;
+				handleHtml(html);
 			}
 			finished();
 		});
