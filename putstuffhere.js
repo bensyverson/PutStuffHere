@@ -217,6 +217,8 @@ var PutStuffHerePrivate = function() {
 
 	this.compile = function(src) {
 		var self = this;
+		src = src.replace(/#[^#\/]+$/, '');
+		
 		if (typeof cache[src] === 'undefined') {
 			var func = self.compileText(self.html[self.currentlyChaining] || self.html[orgstuffhereNull]);
 			cache[src] = func;
