@@ -1,5 +1,7 @@
 'use strict';
 
+if (typeof(require) === typeof(undefined)) window.require = function(){return null;};
+
 
 /** 
 * Based on
@@ -19,7 +21,7 @@ var getViaStandardHTTP = function(src, cb) {
 					} else {
 						err = request.status;
 					}
-					println("AJAX: '" + err + "', '" + val + "'");
+					if (err) println("AJAX: '" + err + "', '" + val + "'");
 					if (cb) cb(err, val);
 				}
 			};
@@ -69,5 +71,7 @@ var PutStuffHereAjax = {
 	getViaStandardHTTP: getViaStandardHTTP,
 	loadURLToElement: loadURLToElement,
 };
+
+if (typeof(module) === typeof(undefined)) window.module = {};
 
 module.exports = PutStuffHereAjax;

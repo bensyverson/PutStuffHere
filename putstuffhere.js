@@ -81,7 +81,7 @@ var PutStuffHerePrivate = function() {
 	this.html[orgstuffhereNull] = "<div></div>";
 
 	this.shouldExtractBody = true;
-
+	
 	var regex = /([\s\W]|^)(?:(?:put|insert)\s+(.+?\S)(?:\s*\(([^)]+)\))?\s+here)([\W\s]|$)/gi;
 	var cache = {};
 
@@ -113,7 +113,7 @@ var PutStuffHerePrivate = function() {
 		} else {
 			varName += '.orgstuffhereEscape()';
 		}
-		return '' + p1 + "\" + ('" + p2 + "' in ctx ? ctx." + varName + " : '') +  \"" + p4;
+		return '' + p1 + "\" + (typeof ctx." + p2 + " !== typeof(undefined) ? ctx." + varName + " : '') +  \"" + p4;
 	};
 
 	this.enqueue = function(aFunc) {
@@ -186,14 +186,17 @@ var PutStuffHerePrivate = function() {
 	 * @returns {Function} The compiled function
 	 * @examples
 	 * var psh = new PutStuffHerePrivate();
+	 * var sub = "<p>put name here\nput subviews (unescaped) here</p>"
 	 * var func = psh.compileText("<div>put stuff here\nput html (unescaped) here</div>", false);
 	 * var lower = psh.compileText("<p>put uppercase (toLocaleLowerCase) here</p>", false);
 	 *
 	 * func // instanceof Function
+	 * sub // instanceof Function
 	 * func({'stuff': 'something'})  // => "<div>something</div>"
 	 * func({'stuff': '<p id="test">&amp;</p>'})  // => "<div>&lt;p id=&quot;test&quot;&gt;&amp;amp;&lt;/p&gt;</div>"
 	 * func({'stuff': 'title', 'html': '<p id="test">&amp;</p>'})  // => '<div>title<p id="test">&amp;</p></div>'
 	 * lower({'uppercase': 'CAFÉ STREETS'}) // => "<p>café streets</p>"
+ 	 * sub({'name': 'A', 'subviews': '<B>'})  // => "<p>A<B></p>"
 	 */
 	this.compileText = function(text, shouldCache) {
 		var self = this;
@@ -203,8 +206,8 @@ var PutStuffHerePrivate = function() {
 		var template = text || self.html[orgstuffhereNull];
 
 		var string = 'return "' + template
-			.replace(/"/g, "\\\"")
-			.replace(/\n/g, "\\\n")
+			.replace(/"/gm, "\\\"")
+			.replace(/\r?\n|\r/g, "\\\n")
 			.replace(regex, wrapVars)
 			+ '";';
 
@@ -286,6 +289,8 @@ PutStuffHerePrivate.prototype.extractBody = function(html) {
 PutStuffHerePrivate.prototype.readHTML = function(src) {
 	var self = this;
 
+	src = src.replace(/#.*$/, '');
+
 	// WARNING:
 	// Because of this, chains can only be added in synchronous methods.
 	self.currentlyChaining = src || orgstuffhereNull;
@@ -342,7 +347,6 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 
 	// In the browser...
 	if (typeof document !== typeof(undefined)) {
-		println(window.location.protocol);
 		if (window.location.protocol === 'file:') {
 			var obj = document.createElement('object');
 			obj.setAttribute('width', 0);
@@ -372,12 +376,12 @@ PutStuffHerePrivate.prototype.readHTML = function(src) {
 			});			
 		}
 	} else if (typeof fs !== typeof(undefined)) {
-
 		// Or in Node.js, or any context capable of loading fs
 		fs.readFile(__dirname + '/' + src, function(err, data){
 			self.html[src] = '';
 			if (err) {
 				println("Warning: " + src);
+				println(err);
 			}
 			if (Buffer.isBuffer(data)) { 
 				var html = data.toString('utf8');
