@@ -1,0 +1,24 @@
+{
+  "name": "putstuffhere",
+  "version": "0.9.0",
+  "description": "Put Stuff Here is a minimalist, human-first templating system.",
+  "main": "index.js",
+  "scripts": {
+    "test": "autodoc -t lib/putstuffhere.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bensyverson/PutStuffHere.git"
+  },
+  "keywords": [
+    "template",
+    "html",
+    "isomorphic"
+  ],
+  "author": "Ben Syverson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bensyverson/PutStuffHere/issues"
+  },
+  "homepage": "https://github.com/bensyverson/PutStuffHere#readme"
+}

@@ -2,17 +2,18 @@
 	<head>
 		<script src="http://localhost:35729/livereload.js"></script>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<script src="queue.js" type="text/javascript" charset="utf-8"></script>
-		<script src="putstuffhere.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/queue.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/putstuffhere.js" type="text/javascript" charset="utf-8"></script>
+		<script src="index.js" type="text/javascript" charset="utf-8"></script>
 		<script>
 
 var init = function() {
 	var psh = PutStuffHere.shared();
 	var templateField = document.getElementById('template');
 	var localsField = document.getElementById('locals');
+	var template = psh.compileText(templateField.value);
 
 	var recalculate = function() {
-		var template = psh.compileText(templateField.value);
 		try {
 			var locals = JSON.parse(localsField.value);
 			localsField.style.background = '#444';
@@ -22,10 +23,16 @@ var init = function() {
 		}
 	};
 
-	templateField.addEventListener('keyup', recalculate);
+	var recompile = function() {
+		template = psh.compileText(templateField.value);
+		recalculate();
+	};
+
+	templateField.addEventListener('keyup', recompile);
 	localsField.addEventListener('keyup', recalculate);
 	recalculate();
 };
+
 window.addEventListener('DOMContentLoaded', init);
 		
 		</script>
