@@ -30,13 +30,14 @@
 
 if (typeof(require) === typeof(undefined))  window.require = function(){return null;};
 var PutStuffHerePrivate = PutStuffHerePrivate || require('./lib/putstuffhere.js');
+var OrgStuffHereQueue = OrgStuffHereQueue || require('./lib/queue.js');
 
 if (typeof(module) === typeof(undefined)) window.module = {};
 
 var _sharedPutStuffHereInstance = new PutStuffHerePrivate();
-
 var PutStuffHere = {
-	'shared': function(){ return _sharedPutStuffHereInstance; }
+	'shared': function(){ return _sharedPutStuffHereInstance; },
+	'queue': OrgStuffHereQueue,
 };
 
 
