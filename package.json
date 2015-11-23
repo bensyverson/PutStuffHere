@@ -1,6 +1,6 @@
 {
   "name": "putstuffhere",
-  "version": "0.9.4",
+  "version": "0.9.6",
   "description": "Put Stuff Here is a minimalist, human-first templating system.",
   "main": "index.js",
   "scripts": {
